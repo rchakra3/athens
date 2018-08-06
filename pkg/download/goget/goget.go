@@ -12,9 +12,9 @@ import (
 
 	"github.com/gomods/athens/pkg/config"
 	"github.com/gomods/athens/pkg/config/env"
-	"github.com/gomods/athens/pkg/download"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/module"
+	p "github.com/gomods/athens/pkg/protocol"
 	"github.com/gomods/athens/pkg/storage"
 	"github.com/spf13/afero"
 )
@@ -22,7 +22,7 @@ import (
 // New returns a download protocol by using
 // go get. You must have a modules supported
 // go binary for this to work.
-func New() (download.Protocol, error) {
+func New() (p.Protocol, error) {
 	const op errors.Op = "goget.New"
 	goBin := env.GoBinPath()
 	fs := afero.NewOsFs()

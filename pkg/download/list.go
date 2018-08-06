@@ -10,13 +10,14 @@ import (
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/paths"
+	p "github.com/gomods/athens/pkg/protocol"
 )
 
 // PathList URL.
 const PathList = "/{module:.+}/@v/list"
 
 // ListHandler implements GET baseURL/module/@v/list
-func ListHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
+func ListHandler(dp p.Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.ListHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c).SetOperationName("listHandler")

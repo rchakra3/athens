@@ -8,13 +8,14 @@ import (
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/log"
+	p "github.com/gomods/athens/pkg/protocol"
 )
 
 // PathVersionZip URL.
 const PathVersionZip = "/{module:.+}/@v/{version}.zip"
 
 // VersionZipHandler implements GET baseURL/module/@v/version.zip
-func VersionZipHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
+func VersionZipHandler(dp p.Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.VersionZipHandler"
 
 	return func(c buffalo.Context) error {

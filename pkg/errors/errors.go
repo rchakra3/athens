@@ -16,6 +16,7 @@ const (
 	KindUnexpected    = http.StatusInternalServerError
 	KindAlreadyExists = http.StatusConflict
 	KindRateLimit     = http.StatusTooManyRequests
+	KindTempRedirect  = http.StatusTemporaryRedirect
 )
 
 // Error is an Athens system error.

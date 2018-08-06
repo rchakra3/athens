@@ -4,17 +4,18 @@ import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gomods/athens/pkg/log"
+	p "github.com/gomods/athens/pkg/protocol"
 	"github.com/sirupsen/logrus"
 )
 
 // ProtocolHandler is a function that takes all that it needs to return
 // a ready-to-go buffalo handler that serves up cmd/go's download protocol.
-type ProtocolHandler func(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler
+type ProtocolHandler func(dp p.Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler
 
 // HandlerOpts are the generic options
 // for a ProtocolHandler
 type HandlerOpts struct {
-	Protocol Protocol
+	Protocol p.Protocol
 	Logger   *log.Logger
 	Engine   *render.Engine
 }

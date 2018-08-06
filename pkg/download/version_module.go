@@ -6,13 +6,14 @@ import (
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/log"
+	p "github.com/gomods/athens/pkg/protocol"
 )
 
 // PathVersionModule URL.
 const PathVersionModule = "/{module:.+}/@v/{version}.mod"
 
 // VersionModuleHandler implements GET baseURL/module/@v/version.mod
-func VersionModuleHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
+func VersionModuleHandler(dp p.Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.VersionModuleHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c).SetOperationName("VersionModuleHandler")

@@ -9,13 +9,14 @@ import (
 	"github.com/gomods/athens/pkg/errors"
 	"github.com/gomods/athens/pkg/log"
 	"github.com/gomods/athens/pkg/paths"
+	p "github.com/gomods/athens/pkg/protocol"
 )
 
 // PathLatest URL.
 const PathLatest = "/{module:.+}/@latest"
 
 // LatestHandler implements GET baseURL/module/@latest
-func LatestHandler(dp Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
+func LatestHandler(dp p.Protocol, lggr log.Entry, eng *render.Engine) buffalo.Handler {
 	const op errors.Op = "download.LatestHandler"
 	return func(c buffalo.Context) error {
 		sp := buffet.SpanFromContext(c)

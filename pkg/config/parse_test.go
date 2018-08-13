@@ -2,11 +2,14 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+const exampleConfigPath = "../../config.example.toml"
 
 func TestEnvOverrides(t *testing.T) {
 
@@ -25,7 +28,7 @@ func TestEnvOverrides(t *testing.T) {
 		WorkerType:        "memory",
 	}
 
-	expConf := Config{
+	expConf := &Config{
 		GoEnv:                "production",
 		LogLevel:             "info",
 		GoBinary:             "go11",
@@ -57,11 +60,14 @@ func TestEnvOverrides(t *testing.T) {
 		"OLYMPUS_BACKGROUND_WORKER_TYPE": expOlympus.WorkerType,
 		"OLYMPUS_REDIS_QUEUE_PORT":       expOlympus.RedisQueueAddress,
 	}
+	envVarBackup := map[string]string{}
 	for k, v := range envVars {
+		oldVal := os.Getenv(k)
+		envVarBackup[k] = oldVal
 		os.Setenv(k, v)
 	}
-	conf := Config{}
-	err := envOverride(&conf)
+	conf := &Config{}
+	err := envOverride(conf)
 	if err != nil {
 		t.Fatalf("Env override failed: %v", err)
 	}
@@ -71,6 +77,7 @@ func TestEnvOverrides(t *testing.T) {
 	if !eq {
 		t.Errorf("Environment variables did not correctly override config values. Expected: %+v. Actual: %+v", expConf, conf)
 	}
+	cleanupEnv(envVarBackup)
 }
 
 func TestStorageEnvOverrides(t *testing.T) {
@@ -78,7 +85,7 @@ func TestStorageEnvOverrides(t *testing.T) {
 	globalTimeout := 300
 
 	// Set values that are not defaults for everything
-	expStorage := StorageConfig{
+	expStorage := &StorageConfig{
 		CDN: &CDNConfig{
 			Endpoint: "cdnEndpoint",
 			Timeout:  globalTimeout,
@@ -122,26 +129,116 @@ func TestStorageEnvOverrides(t *testing.T) {
 		"MONGO_CONN_TIMEOUT_SEC":         strconv.Itoa(expStorage.Mongo.Timeout),
 		"ATHENS_RDBMS_STORAGE_NAME":      expStorage.RDBMS.Name,
 	}
+	envVarBackup := map[string]string{}
 	for k, v := range envVars {
+		oldVal := os.Getenv(k)
+		envVarBackup[k] = oldVal
 		os.Setenv(k, v)
 	}
-	conf := Config{}
-	err := envOverride(&conf)
+	conf := &Config{}
+	err := envOverride(conf)
 	if err != nil {
 		t.Fatalf("Env override failed: %v", err)
 	}
 	setDefaultTimeouts(conf.Storage, globalTimeout)
 	deleteInvalidStorageConfigs(conf.Storage)
 
-	eq := cmp.Equal(expStorage, *conf.Storage)
+	eq := cmp.Equal(conf.Storage, expStorage)
 	if !eq {
 		t.Error("Environment variables did not correctly override storage config values")
 	}
+	cleanupEnv(envVarBackup)
 }
 
 func TestParseDefaultsSuccess(t *testing.T) {
 	_, err := parseConfig("")
 	if err != nil {
 		t.Errorf("Default values are causing validation failures")
+	}
+}
+
+func TestParseExampleConfig(t *testing.T) {
+
+	globalTimeout := 300
+
+	expProxy := &ProxyConfig{
+		StorageType:           "mongo",
+		OlympusGlobalEndpoint: "olympus.gomods.io",
+		RedisQueueAddress:     ":6379",
+		Port:                  ":3000",
+	}
+
+	expOlympus := &OlympusConfig{
+		StorageType:       "memory",
+		RedisQueueAddress: ":6379",
+		Port:              ":3001",
+		WorkerType:        "redis",
+	}
+
+	expStorage := &StorageConfig{
+		CDN: &CDNConfig{
+			Endpoint: "cdn.example.com",
+			Timeout:  globalTimeout,
+		},
+		Disk: &DiskConfig{
+			RootPath: "/path/on/disk",
+		},
+		GCP: &GCPConfig{
+			ProjectID: "MY_GCP_PROJECT_ID",
+			Bucket:    "MY_GCP_BUCKET",
+			Timeout:   globalTimeout,
+		},
+		Minio: &MinioConfig{
+			Endpoint:  "minio.example.com",
+			Key:       "MY_KEY",
+			Secret:    "MY_SECRET",
+			EnableSSL: true,
+			Bucket:    "gomods",
+			Timeout:   globalTimeout,
+		},
+		Mongo: &MongoConfig{
+			URL:     "mongo.example.com",
+			Timeout: globalTimeout,
+		},
+		RDBMS: &RDBMSConfig{
+			Name:    "development",
+			Timeout: globalTimeout,
+		},
+	}
+
+	expConf := &Config{
+		GoEnv:                "development",
+		LogLevel:             "debug",
+		GoBinary:             "go",
+		MaxConcurrency:       4,
+		MaxWorkerFails:       5,
+		CloudRuntime:         "none",
+		FilterFile:           "filter.conf",
+		Timeout:              300,
+		EnableCSRFProtection: false,
+		Proxy:                expProxy,
+		Olympus:              expOlympus,
+		Storage:              expStorage,
+	}
+
+	absPath, _ := filepath.Abs(exampleConfigPath)
+	parsedConf, err := ParseConfigFile(absPath)
+	if err != nil {
+		t.Errorf("Unable to parse example config file: %+v", err)
+	}
+
+	eq := cmp.Equal(parsedConf, expConf)
+	if !eq {
+		t.Errorf("Parsed Example configuration did not match expected values. Expected: %+v. Actual: %+v", expConf, parsedConf)
+	}
+}
+
+func cleanupEnv(envVars map[string]string) {
+	for k, v := range envVars {
+		if v != "" {
+			os.Setenv(k, v)
+		} else {
+			os.Unsetenv(k)
+		}
 	}
 }

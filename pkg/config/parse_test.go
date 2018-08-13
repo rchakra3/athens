@@ -221,7 +221,10 @@ func TestParseExampleConfig(t *testing.T) {
 		Storage:              expStorage,
 	}
 
-	absPath, _ := filepath.Abs(exampleConfigPath)
+	absPath, err := filepath.Abs(exampleConfigPath)
+	if err != nil {
+		t.Errorf("Unable to get absolute path to example config file")
+	}
 	parsedConf, err := ParseConfigFile(absPath)
 	if err != nil {
 		t.Errorf("Unable to parse example config file: %+v", err)
